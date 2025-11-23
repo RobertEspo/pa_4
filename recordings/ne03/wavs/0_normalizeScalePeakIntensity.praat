@@ -9,4 +9,5 @@ for i to numberOfFiles
 	Scale peak... 0.99
 	Write to binary file... ./'soundName$'
 	Remove
+	appendInfoLine: "File ", i, " is complete!"
 endfor

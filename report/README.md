@@ -1,0 +1,449 @@
+Programming assignment 4
+================
+
+**Author**: Robert Esposito **Date**: Last update: 2025-11-23
+15:46:40.443513
+
+# Overview
+
+<!-- 
+  Talk briefly about what you did here 
+  Describe your hypotheses
+-->
+
+Three Spanish-English bilinguals and three L1 English L2 Spanish
+learners produced three repetitions of 45 words in Spanish. The words
+were bisyllabic paroxytone nonce words of the form CVkV. Each word
+represented a combination of /p t k/ and a vowel /i e a o u/. The
+release burst, voice onset, and vowel duration of the first syllable
+were identified. In total, there were 810 tokens (6 participants x 45
+words x 3 repetitions).
+
+My hypothesis is that the Spanish-English simultaneous bilinguals will
+have shorter VOTs on average than the L1 English L2 Spanish learners.
+
+# Prep
+
+## Libraries
+
+## Load data
+
+``` r
+# You need to get all the files in the 'data' directory and combine them
+# Check previous examples we did in class 
+
+dat_raw <- list.files(
+  path = here("data"),
+  pattern = "\\.csv$",
+  full.names = TRUE
+) %>%
+  map_dfr(read_csv) 
+```
+
+    ## Rows: 45 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): fileID
+    ## dbl (3): f1, f2, vot
+    ## lgl (1): notes
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+    ## Rows: 45 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): fileID
+    ## dbl (3): f1, f2, vot
+    ## lgl (1): notes
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+    ## Rows: 45 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): fileID
+    ## dbl (3): f1, f2, vot
+    ## lgl (1): notes
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+    ## Rows: 45 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): fileID
+    ## dbl (3): f1, f2, vot
+    ## lgl (1): notes
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+    ## Rows: 45 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): fileID
+    ## dbl (3): f1, f2, vot
+    ## lgl (1): notes
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+    ## Rows: 45 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): fileID
+    ## dbl (3): f1, f2, vot
+    ## lgl (1): notes
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+## Tidy data
+
+``` r
+# Convert from long to wide or wide to long format as necessary (check 
+# examples from class)
+# Create any other relevant variables here 
+
+dat_tidy <- dat_raw %>%
+  select(-notes) %>%
+  separate(fileID, into=c("participant","word"), sep = "_") %>%
+  mutate(
+    bilingual = if_else(str_detect(participant,"bi"), "simultaneous","late"),
+    rep_num = str_extract(word, "\\d$") %>% as.numeric,
+    rep_num = if_else(is.na(rep_num), 1, rep_num + 1),
+    word = str_remove(word, "\\d$")
+  )
+```
+
+# Analysis
+
+## Descriptives
+
+``` r
+# Give some descriptive summaries of your data 
+# Display your descriptives in a table (try knitr::kable())
+
+dat_tidy %>%
+  select(-f1, -f2) %>%
+  group_by(bilingual) %>%
+  summarize(mean_vot = mean(vot),
+            sd_vot = sd(vot)) %>%
+  kable()
+```
+
+| bilingual    | mean_vot |   sd_vot |
+|:-------------|---------:|---------:|
+| late         | 32.88615 | 16.06734 |
+| simultaneous | 19.84437 |  9.12929 |
+
+## Visualization
+
+``` r
+# Include some plots here
+
+dat_tidy %>%
+  ggplot(aes(x = bilingual, y = vot)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = participant),
+    width = 0.15)
+```
+
+<img src="README_files/figure-gfm/plots-1.png" width="672" />
+
+``` r
+dat_tidy %>% 
+  ggplot(aes(x = vot, fill = bilingual, color = bilingual)) +
+  geom_density(alpha = 0.3, linewidth = 1)
+```
+
+<img src="README_files/figure-gfm/plots-2.png" width="672" />
+
+``` r
+# Here's a cool plot chatgpt recommended
+
+dat_tidy %>%
+  ggplot(aes(x = bilingual, y = vot, fill = bilingual)) +
+  geom_half_violin(side = "l", alpha = 0.6, trim = FALSE) +
+  geom_half_boxplot(side = "r", width = 0.2, outlier.shape = NA) +
+  geom_jitter(width = 0.05, alpha = 0.4, size = 1) +
+  theme_classic()
+```
+
+<img src="README_files/figure-gfm/plots-3.png" width="672" />
+
+<!-- 
+Also include a professional looking figure illustrating an example of the acoustics 
+of the production data, i.e., a plot generated in praat.
+You decide what is relevant (something related to your hypothesis). 
+Think about where this file should be located in your project. 
+What location makes most sense in terms of organization? 
+How will you access the file (path) from this .Rmd file?
+If you need help consider the following sources: 
+  - Search 'Rmarkdown image' on google, stackoverflow, etc.
+  - Search the 'knitr' package help files in RStudio
+  - Search the internet for HTML code (not recommended, but it works)
+  - Check the code from my class presentations (may or may not be helpful)
+-->
+
+``` r
+# Figure generated from Praat
+# Generated using Praat script: https://github.com/wendyelviragarcia/create_pictures
+
+# This first figure shows the word 'kaka' for the simultaneous bilingual participant bi03.
+include_graphics(here("figs","bi03_kaka1_entire_word.png"))
+```
+
+![](../figs/bi03_kaka1_entire_word.png)<!-- -->
+
+``` r
+# This second figure shows the same production for the same participant, zoomed in on
+# the first syllable from which the measures were taken.
+include_graphics(here("figs","bi03_kaka1_first_syllable.png"))
+```
+
+![](../figs/bi03_kaka1_first_syllable.png)<!-- -->
+
+``` r
+# Both figures' TextGrids have the following format:
+# tier 1 = release
+# tier 2 = voice onset
+# tier 3 = vowel duration
+```
+
+## Hypothesis test
+
+``` r
+# Conduct a simple statistical analysis here (optional)
+
+# weakly informative priors
+vot_priors <- c(
+  prior(normal(30, 20), class = "Intercept"), # typical range for voiceless stop in Spanish
+  prior(normal(0,20), class = "b") # -20 to +20 difference between groups
+)
+```
+
+``` r
+# model (not run each time)
+
+bda_vot <- brm(
+  vot ~ bilingual +
+    (1 | participant) +
+    (1 | word),
+  warmup = 2000, iter = 4000, chains = 4,
+  cores = 4,
+  control = list(adapt_delta = 0.99, max_treedepth = 20),
+  family = gaussian(),
+  prior = vot_priors,
+  data = dat_tidy,
+  file = here("models", "bda_vot")
+)
+```
+
+``` r
+# load model
+
+bda_vot <- readRDS(here("models","bda_vot.RDS"))
+
+# ESTIMATE AND SPREAD PLOT
+
+# conditional effects of bilingualism
+vot_ce <- conditional_effects(
+  bda_vot,
+  effects = "bilingual",
+  re_formula = NA,
+  method = "posterior_epred",
+  spaghetti = TRUE
+)
+
+# extract relevant col
+ce_df <- vot_ce$bilingual
+
+# colors and labels
+my_palette <- viridis::viridis_pal(option = "B", end = 0.85)(2)
+sentence_labs <- c("late conseuctive", "simultaneous")
+
+# plot w/ empirical data
+# this figure represents the median with 95% CI.
+vot_bda_plot <- ggplot() +
+  geom_point(data = ce_df, aes(x = bilingual, y = estimate__), color = "black", size = 3) +
+  geom_errorbar(data = ce_df, aes(x = bilingual, ymin = lower__, ymax = upper__), width = 0.2, color = "black") +
+  geom_jitter(data = dat_tidy, aes(x = bilingual, y = vot, color = bilingual), width = 0.1, alpha = 0.6) +
+  scale_color_manual(values = my_palette, labels = sentence_labs, name = NULL) +
+  scale_x_discrete(labels = sentence_labs) +
+  labs(x = "Bilingual group", y = "VOT (ms)") +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "top"
+  )
+
+# DIFFERENCE PLOT
+
+# get posterior draws
+bda_vot_posterior <- posterior_samples(bda_vot)
+```
+
+    ## Warning: Method 'posterior_samples' is deprecated. Please see ?as_draws for
+    ## recommended alternatives.
+
+``` r
+# simultaneous – late consecutive (= intercept)
+diff_draws <- bda_vot_posterior$b_bilingualsimultaneous
+
+# plot
+ggplot(data.frame(diff = diff_draws), aes(x = diff)) +
+  geom_density(fill = "skyblue", alpha = 0.7) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    title = "Difference in VOT (Simultaneous – Late consecutive)",
+    y = "Posterior density",
+    x = "VOT (ms)"
+  ) +
+  theme_bw(base_size = 14)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+# Conclusion
+
+<!-- 
+Revisit your hypotheses (refer to plots, figures, tables, statistical tests, 
+etc.)
+&#10;Reflect on the entire process. 
+What did you enjoy? What did you hate? What did you learn? 
+What would you do differently?
+-->
+
+``` r
+# stats for conclusion
+
+# helpers from joseph casillas
+
+# Round and format numbers to exactly N digits
+specify_decimal <- function(x, k) {
+  out <- trimws(format(round(x, k), nsmall = k))
+  return(out)
+}
+
+
+# Print values from tibble for article
+pull_from_tib <- function(df, col, row, val) {
+  col <- enquo(col)
+  row <- enquo(row)
+  val <- enquo(val)
+  val <- filter(df, !!col == !!row) %>% pull(!!val)
+  return(val)
+}
+
+# Report estimate from posterior distribution summary
+report_posterior <- function(df, param, is_exp = TRUE, mod = NULL) {
+  
+  if (is_exp == TRUE) {
+    
+    # Extract wanted value from model output
+    est  <- df[df$Parameter == param, "Median"]
+    cis  <- df[df$Parameter == param, "HDI"]
+    rope <- df[df$Parameter == param, "% in ROPE"]
+    mpe  <- df[df$Parameter == param, "MPE"]
+    
+    capture.output(
+      paste0("(&beta; = ", est, ", HDI = ", cis, ", ROPE = ", rope, 
+             ", MPE = ", mpe, ")", "\n") %>% 
+        cat()) %>% 
+      paste()
+  } else {
+    # Extract wanted value from model output
+    est  <- df[df$Parameter == param & df$Model == mod, "Median"]
+    cis  <- df[df$Parameter == param & df$Model == mod, "HDI"]
+    mpe  <- df[df$Parameter == param & df$Model == mod, "MPE"]
+    
+    capture.output(
+      paste0("(&beta; = ", est, ", HDI = ", cis, ", MPE = ", mpe, ")", 
+             "\n") %>% 
+        cat()) %>% 
+      paste()
+  }
+}
+
+# Report manually calculated effects (takes a col of a df)
+my_posterior_summary <- . %>% 
+  pull() %>% 
+  describe_posterior(., rope_range = c(-0.1, 0.1)) %>% 
+  as_tibble() %>% 
+  select(-c("CI", "ROPE_CI", "ROPE_low", "ROPE_high")) %>% 
+  mutate(across(-c("Parameter"), specify_decimal, k = 2)) %>% 
+  mutate(across(-Parameter, printy::fmt_minus_sign)) %>% 
+  mutate(HDI = glue("[{CI_low}, {CI_high}]")) %>% 
+  select(Parameter, Median, HDI, `% in ROPE` = ROPE_Percentage, MPE = pd) %>% 
+  report_posterior(., param = "Posterior")
+  
+vot_post <- as_tibble(bda_vot)
+
+late_consecutive <- transmute(vot_post, 
+                          late_consecutive = b_Intercept) %>% 
+  my_posterior_summary()
+```
+
+    ## Warning: There was 1 warning in `mutate()`.
+    ## ℹ In argument: `across(-c("Parameter"), specify_decimal, k = 2)`.
+    ## Caused by warning:
+    ## ! The `...` argument of `across()` is deprecated as of dplyr 1.1.0.
+    ## Supply arguments directly to `.fns` through an anonymous function instead.
+    ## 
+    ##   # Previously
+    ##   across(a:b, mean, na.rm = TRUE)
+    ## 
+    ##   # Now
+    ##   across(a:b, \(x) mean(x, na.rm = TRUE))
+
+``` r
+simultaneous <- transmute(vot_post,
+                               simultaneous = b_Intercept + b_bilingualsimultaneous) %>%
+  my_posterior_summary()
+
+difference <- transmute(vot_post, 
+                          simultaneous = b_bilingualsimultaneous) %>% 
+  my_posterior_summary()
+```
+
+My hypothesis was that the English-Spanish bilinguals would show shorter
+VOTs than L1 English L2 Spanish late consecutive learners. This
+hypothesis is supported by the data presented here. The simultaneous
+bilinguals had a shorter VOT (β = 20.12, HDI = \[12.32, 28.45\], ROPE =
+0.00, MPE = 1.00) than the late consecutive L2 Spanish learners (β =
+32.73, HDI = \[24.56, 40.22\], ROPE = 0.00, MPE = 1.00). The difference
+(β = −12.70, HDI = \[−20.62, −3.09\], ROPE = 0.00, MPE = 0.99) is
+smaller than would be expected for a production of English voiceless
+stops, indicating that the L2 learners are beginning to shift their /p t
+k/ VOTs to Spanish-like categories.
+
+Making the plots was enjoyable. Whenever I make plots, I try to make
+some on my own based on what I already know, and then look around for
+other types of plots that I might not have seen before (e.g., the
+half-eye/umbrella plot from ChatGPT).
+
+Segmenting was a lot less annoying that I expected, overall because of
+the script Joseph provided that automatically opens and saves the
+.wavs/.TextGrids in a directory. However, I still can’t say that I love
+doing it. The ambiguity in identifying certain regions (e.g., when
+voicing starts vs when the vowel starts, when the vowel ends) is still
+something I need to work on to identify what is important to pay
+attention to.
+
+Defining priors is also still annoying. My priors were the following:
+
+``` r
+vot_priors <- c(
+  prior(normal(30, 20), class = "Intercept"), # typical range for voiceless stop in Spanish
+  prior(normal(0,20), class = "b") # -20 to +20 difference between groups
+)
+```
+
+I have the feeling that they are still a bit too restrictive, but I’m
+not sure. I’m also unsure if I should have provided a prior that more
+strongly militates against values below zero, since we wouldn’t expect
+lead VOT for either bilinguals or learners.
+
+I learned about: - Joseph’s script that opens/saves wavs/textgrids
+automatically, which I will definitely be using in the future - A script
+that draws the spectrogram, textgrid, and some other features -
+Refreshed my knowledge about using the posterior distribution
+
+</br></br>
